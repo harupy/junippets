@@ -3,7 +3,7 @@
 A Chrome extension to provide snippets for Jupyter
 
 <kbd>
-  <img src="https://user-images.githubusercontent.com/17039389/60017754-7ad44980-96c4-11e9-8ff4-8a680ff393fd.gif">
+  <img src="https://user-images.githubusercontent.com/17039389/61996678-e8afce80-b0d1-11e9-95a4-8a9cf332d16e.gif">
 </kbd>
 
 ## Installation
@@ -15,7 +15,7 @@ A Chrome extension to provide snippets for Jupyter
 1. Click `Load unpacked`
 1. Select `src` in the extension directory
 
-## Getting Started
+## Getting started
 
 1. Type `ipd`
 2. Press `Shift` (`ipd` will be expanded to `import pandas as pd`)
