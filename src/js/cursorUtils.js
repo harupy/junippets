@@ -2,12 +2,17 @@ export const makeCursor = (ch, line) => {
   return { ch, line };
 };
 
-export const withOffset = (cursor, chs = 0, lines = 0) => {
+export const offsetCursor = (cursor, chs = 0, lines = 0) => {
   return { ch: cursor.ch + chs, line: cursor.line + lines };
 };
 
+export const offsetRange = (range, chs = 0, lines = 0) => {
+  const { anchor, head } = range;
+  return { anchor: offsetCursor(anchor, chs, lines), head: offsetCursor(head, chs, lines) };
+};
+
 export const getCursorWithOffset = (cm, chs = 0, lines = 0) => {
-  return withOffset(cm.getCursor(), chs, lines);
+  return offsetCursor(cm.getCursor(), chs, lines);
 };
 
 export const getCursorLine = cm => {

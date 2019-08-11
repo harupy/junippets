@@ -42,12 +42,12 @@ const snippets = {
   kfold: [
     'from sklearn.model_selection import KFold',
     '',
-    'kf = KFold(n_splits=${n}, random_state=0)',
+    'kf = KFold(n_splits=${n_splits}, random_state=0)',
   ],
   skfold: [
     'from sklearn.model_selection import StratifiedKFold',
     '',
-    'skf = StratifiedKFold(n_splits=${n}, random_state=0)',
+    'skf = StratifiedKFold(n_splits=${n_splits}, random_state=0)',
   ],
 
   // matplotlib
@@ -76,18 +76,17 @@ const snippets = {
   af: 'ascending=${False}',
 };
 
-const replacePlaceholder = (body, ranges = []) => {
+const findPlaceholders = (body, ranges = []) => {
   const pattern = /\$\{([^{}]*)\}/m;
   const match = body.match(pattern);
   if (!match) {
     return [body, ranges];
   } else {
-    console.log(match);
     const [placeholder, defaultStr] = match;
     const head = cu.makeCursor(match.index, 0);
-    const anchor = cu.withOffset(head, defaultStr.length);
+    const anchor = cu.offsetCursor(head, defaultStr.length);
     const newBody = body.replace(placeholder, defaultStr);
-    return replacePlaceholder(newBody, [...ranges, { head, anchor }]);
+    return findPlaceholders(newBody, [...ranges, { head, anchor }]);
   }
 };
 
@@ -114,21 +113,29 @@ const expandSnippet = cm => {
 
   if (prefix && prefix in snippets) {
     const match = snippets[prefix];
-    const body = Array.isArray(match) ? match.join('\n') : match;
-    // const numLines = Array.isArray(match) ? match.length : 1;
+    const lines = Array.isArray(match) ? match : [match];
     const selections = cm.listSelections();
     const len = (prefix + ['', ...args].join(argSep)).length;
 
     const rangesToReplace = selections.map(({ anchor, head }) => {
       return { anchor, head: { line: head.line, ch: head.ch - len } };
     });
-    const [newBody, rangesToSelect] = replacePlaceholder(body);
+
+    const results = lines.map(line => findPlaceholders(line));
+    const placeholderRanges = results
+      .map((res, idx) => res[1].map(range => cu.offsetRange(range, 0, idx)))
+      .flat();
+    const newBody = results.map(res => res[0]).join('\n');
 
     const newSelections = selections
-      .map(sel => {
-        return rangesToSelect.map(range => {
-          const anchor = cu.withOffset(cu.mergeCursors(sel.anchor, range.anchor), -len);
-          const head = cu.withOffset(cu.mergeCursors(sel.head, range.head), -len);
+      .map((sel, idx) => {
+        return placeholderRanges.map(range => {
+          const anchorMerged = cu.mergeCursors(sel.anchor, range.anchor);
+          const headMerged = cu.mergeCursors(sel.head, range.head);
+
+          const lineOffset = idx * (lines.length - 1);
+          const anchor = cu.offsetCursor(anchorMerged, -len, lineOffset);
+          const head = cu.offsetCursor(headMerged, -len, lineOffset);
           return { anchor, head };
         });
       })
