@@ -9,6 +9,7 @@ A Chrome extension to provide snippets for Jupyter
 ## Installation
 
 1. Clone this repository
+1. Run `npm install`
 1. Run `npm run build` or `npm run dev`
 1. Open `chrome://extensions` on Chrome
 1. Enable Developer mode if it's disabled
@@ -18,9 +19,9 @@ A Chrome extension to provide snippets for Jupyter
 ## Getting started
 
 1. Type `ipd`
-2. Press `Shift` (`ipd` will be expanded to `import pandas as pd`)
+2. Press `Alt` (`ipd` will be expanded to `import pandas as pd`)
 
-## Todos
+## TODO
 
 - Make snippets list
 
