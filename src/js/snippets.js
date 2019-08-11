@@ -13,8 +13,8 @@ const snippets = {
   itq: 'from tqdm import tqdm',
   ipd: 'import pandas as pd',
   inp: 'import numpy as np',
-  iplt: 'import matplotlib.pyplot as plt',
-  ipl: [
+  plt: 'import matplotlib.pyplot as plt',
+  plotly: [
     'import plotly.offline as py',
     'py.init_notebook_mode(connected=True)',
     'import plotly.graph_objs as go',
@@ -27,18 +27,28 @@ const snippets = {
   npas: 'numpy.argsort(${args})',
 
   // pandas
-  pdrc: 'pd.read_csv(${args})',
-  pdtd: 'pd.to_datetime(${args})',
-  pdcc: 'pd.concat(${args})',
+  prc: 'pd.read_csv(${args})',
+  ptd: 'pd.to_datetime(${args})',
+  pcc: 'pd.concat(${args})',
 
   iloc: 'iloc[${args}]',
   vc: 'value_counts()',
-  nuni: 'nunique()',
-  sc: 'sort_values(${args})',
+  nu: 'nunique()',
+  sv: 'sort_values(${args})',
   gb: 'groupby(${args})',
 
-  // sklearn metrics
+  // sklearn
   tts: 'X_train, X_test, y_train, y_test = train_test_split(${args})',
+  kfold: [
+    'from sklearn.model_selection import KFold',
+    '',
+    'kf = KFold(n_splits=${n}, random_state=0)',
+  ],
+  skfold: [
+    'from sklearn.model_selection import StratifiedKFold',
+    '',
+    'skf = StratifiedKFold(n_splits=${n}, random_state=0)',
+  ],
 
   // matplotlib
   title: 'plt.title(${args})',
@@ -57,17 +67,22 @@ const snippets = {
   gof: 'go.Figure(data=${data}, layout=layout)',
   ipp: 'py.iplot(fig)',
 
+  // seaborn
+  sdp: 'sns.distplot(${args})',
+  sbp: 'sns.barplot(${args})',
+
   // others
   rs: 'random_state=${seed}',
   af: 'ascending=${False}',
 };
 
 const replacePlaceholder = (body, ranges = []) => {
-  const pattern = /\$\{([^{}]*)\}/;
+  const pattern = /\$\{([^{}]*)\}/m;
   const match = body.match(pattern);
   if (!match) {
     return [body, ranges];
   } else {
+    console.log(match);
     const [placeholder, defaultStr] = match;
     const head = cu.makeCursor(match.index, 0);
     const anchor = cu.withOffset(head, defaultStr.length);
@@ -100,9 +115,11 @@ const expandSnippet = cm => {
   if (prefix && prefix in snippets) {
     const match = snippets[prefix];
     const body = Array.isArray(match) ? match.join('\n') : match;
+    // const numLines = Array.isArray(match) ? match.length : 1;
     const selections = cm.listSelections();
+    const len = (prefix + ['', ...args].join(argSep)).length;
+
     const rangesToReplace = selections.map(({ anchor, head }) => {
-      const len = (prefix + ['', ...args].join(argSep)).length;
       return { anchor, head: { line: head.line, ch: head.ch - len } };
     });
     const [newBody, rangesToSelect] = replacePlaceholder(body);
@@ -110,7 +127,6 @@ const expandSnippet = cm => {
     const newSelections = selections
       .map(sel => {
         return rangesToSelect.map(range => {
-          const len = (prefix + ['', ...args].join(argSep)).length;
           const anchor = cu.withOffset(cu.mergeCursors(sel.anchor, range.anchor), -len);
           const head = cu.withOffset(cu.mergeCursors(sel.head, range.head), -len);
           return { anchor, head };
@@ -133,6 +149,5 @@ const expandSnippet = cm => {
 
 export default cm => {
   // enable snippets
-  const expandSnippetOrIndent = cm => !expandSnippet(cm);
-  cm.options.extraKeys['Shift-Shift'] = expandSnippetOrIndent;
+  cm.options.extraKeys['Alt'] = expandSnippet;
 };
